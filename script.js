@@ -36,7 +36,9 @@ let firstPipeYPos = 0;
 let secondPipeYPos = gameWindowHeight - pipeHeight;
 
 // Basically just the xPos's, variable heights later
-let pipes = [800, 1200, 1500, 1800];
+// When pipe[0] is less than gameWindowWidth, reset it to the 900 spot 
+let pipes = [900, 1200, 1500];
+
 
 /*
 Infinite Pipes:
@@ -57,8 +59,17 @@ Flow:
 
 */
 
+// Gap size based on score - good
+let gapSizes = [200, 180, 160, 140, 120, 100];
+
+let distanceBetweenPipePair = 300;
+
 backgroundImage.onload = function() {
     update(); 
+}
+
+function randomFromArray(array) {
+    return array(Math.floor(Math.random() * array.length));
 }
 
 // Might need to use an object lol lot of parameters there
@@ -66,6 +77,13 @@ function AABB_Collision(flappyX, flappyY, flappyWidth, flappyHeight, pipeX, pipe
     if (flappyX < pipeX + pipeWidth && flappyX + flappyWidth > pipeX &&
         flappyY < pipeY + pipeHeight && flappyY + flappyHeight > pipeY) {
         return true;
+    }
+}
+
+// Reset a pipe when it goes off screen
+function resetPipes(pipes, index) { 
+    if (pipes[index] < 0 - pipeWidth) {
+        pipes[index] = 900;
     }
 }
 
@@ -80,6 +98,11 @@ function update() {
 
     // Move Pipes
     pipes = pipes.map(element => element - 1);
+
+    // "Infinite Pipes"
+    for (i = 0; i < pipes.length; i++) {
+        resetPipes(pipes, i);
+    }
 
     // Collision with pipe1 set test
     if (AABB_Collision(rectX, rectY, rectWidth, rectHeight, pipes[0], firstPipeYPos, pipeWidth, pipeHeight) || 
@@ -115,8 +138,8 @@ function update() {
      ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
      ctx.fillStyle = "blue";
      for (let i = 0; i < pipes.length; i++) {
-        ctx.fillRect(pipes[i], firstPipeYPos, pipeWidth, pipeHeight);
-        ctx.fillRect(pipes[i], secondPipeYPos, pipeWidth, pipeHeight);
+        ctx.fillRect(pipes[i], 0, pipeWidth, pipeHeight);
+        ctx.fillRect(pipes[i], pipeHeight + gapSizes[i], pipeWidth, gameWindowHeight - (pipeHeight + gapSizes[i]));
      }
      ctx.stroke();
      requestAnimationFrame(update);
