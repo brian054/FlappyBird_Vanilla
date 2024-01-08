@@ -1,8 +1,8 @@
 /* 
-Friday TODO: 
-    - Infinite Pipes
-    - Score
-    - Set collision on pipes
+TODO: 
+    - Fix pipe gapSize for recycled pipes, needs to hold old size when gapSize switches over
+    - Set variable yPos's for pipes (4 or 5 yPos's???), pick a random one from array 
+
     - Sprites
     - Death Animation
     - Wishlist: 
@@ -37,7 +37,10 @@ let secondPipeYPos = gameWindowHeight - pipeHeight;
 
 // Basically just the xPos's, variable heights later
 // When pipe[0] is less than gameWindowWidth, reset it to the 900 spot 
-let pipes = [900, 1200, 1500];
+let bufferPipes = [900, 1200];
+let recycledPipes = [];
+
+let score = 0;
 
 
 /*
@@ -60,7 +63,9 @@ Flow:
 */
 
 // Gap size based on score - good
-let gapSizes = [200, 180, 160, 140, 120, 100];
+let gapSize = 200; // decrease by 20 every 10 points
+let minimumGapSize = 100;
+//let gapSizes = [200, 180, 160, 140, 120, 100];
 
 let distanceBetweenPipePair = 300;
 
@@ -87,6 +92,11 @@ function resetPipes(pipes, index) {
     }
 }
 
+// Set gapSize depending on score
+function gapSizeCheck() {
+
+}
+
 function update() {
     ctx.drawImage(backgroundImage, 0, 0, backgroundImage.width, backgroundImage.height);   
 
@@ -97,16 +107,21 @@ function update() {
     rectY += verticalVelocity;
 
     // Move Pipes
-    pipes = pipes.map(element => element - 1);
+    bufferPipes = bufferPipes.map(element => element - 1);
+    
+    // If there is a recycled pipe, move it as well
+    if (recycledPipes) {
+        recycledPipes = recycledPipes.map(element => element - 1);
+    }
 
     // "Infinite Pipes"
-    for (i = 0; i < pipes.length; i++) {
-        resetPipes(pipes, i);
+    for (i = 0; i < bufferPipes.length; i++) {
+        resetPipes(bufferPipes, i);
     }
 
     // Collision with pipe1 set test
-    if (AABB_Collision(rectX, rectY, rectWidth, rectHeight, pipes[0], firstPipeYPos, pipeWidth, pipeHeight) || 
-        AABB_Collision(rectX, rectY, rectWidth, rectHeight, pipes[0], secondPipeYPos, pipeWidth, pipeHeight)) {
+    if (AABB_Collision(rectX, rectY, rectWidth, rectHeight, bufferPipes[0], firstPipeYPos, pipeWidth, pipeHeight) || 
+        AABB_Collision(rectX, rectY, rectWidth, rectHeight, bufferPipes[0], secondPipeYPos, pipeWidth, pipeHeight)) {
         rectColor = "blue";
     }
 
@@ -114,6 +129,29 @@ function update() {
     if (rectY > gameWindowHeight - rectHeight - 125) {
         rectY = gameWindowHeight - rectHeight - 125;
         verticalVelocity = 0;
+    }
+
+    // Increase score if needed
+    if (bufferPipes[0] + pipeWidth < rectX) {
+        score += 1;
+        console.log("Score = " + score);
+        if (score % 10 == 0 && gapSize != minimumGapSize) { 
+            gapSize -= 20;
+        }
+        // Assign recycled and buffered pipes xPos's
+        if (recycledPipes[0]) {
+            recycledPipes[1] = bufferPipes[0];
+        } else {
+            recycledPipes[0] = bufferPipes[0];
+        }
+        bufferPipes[0] = bufferPipes[1];
+        bufferPipes[1] = bufferPipes[0] + distanceBetweenPipePair; 
+    }
+
+    // Switch recycled out if needed - this currently never runs
+    if (recycledPipes[0] + pipeWidth < 0) {
+        recycledPipes[0] = recycledPipes[1];
+        recycledPipes[1] = undefined;
     }
 
     // Handle Input
@@ -132,17 +170,21 @@ function update() {
         }
     });
 
-     // Draw Flappy
-     ctx.beginPath();
-     ctx.fillStyle = rectColor;
-     ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
-     ctx.fillStyle = "blue";
-     for (let i = 0; i < pipes.length; i++) {
-        ctx.fillRect(pipes[i], 0, pipeWidth, pipeHeight);
-        ctx.fillRect(pipes[i], pipeHeight + gapSizes[i], pipeWidth, gameWindowHeight - (pipeHeight + gapSizes[i]));
-     }
-     ctx.stroke();
-     requestAnimationFrame(update);
+    // Draw Flappy
+    ctx.beginPath();
+    ctx.fillStyle = rectColor;
+    ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+    ctx.fillStyle = "blue";
+    for (let i = 0; i < recycledPipes.length; i++) {
+        ctx.fillRect(recycledPipes[i], 0, pipeWidth, pipeHeight);
+        ctx.fillRect(recycledPipes[i], pipeHeight + gapSize, pipeWidth, gameWindowHeight - (pipeHeight + gapSize));
+    }
+    for (let i = 0; i < bufferPipes.length; i++) {
+        ctx.fillRect(bufferPipes[i], 0, pipeWidth, pipeHeight);
+        ctx.fillRect(bufferPipes[i], pipeHeight + gapSize, pipeWidth, gameWindowHeight - (pipeHeight + gapSize));
+    }
+    ctx.stroke();
+    requestAnimationFrame(update);
 }
 
 requestAnimationFrame(update);
