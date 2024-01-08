@@ -2,6 +2,8 @@
 TODO: 
     - Fix pipe gapSize for recycled pipes, needs to hold old size when gapSize switches over
     - Set variable yPos's for pipes (4 or 5 yPos's???), pick a random one from array 
+    - FIXED TIME STEP runs way slower on 2nd monitor we need consistency across all 
+
 
     - Sprites
     - Death Animation
@@ -108,11 +110,7 @@ function update() {
 
     // Move Pipes
     bufferPipes = bufferPipes.map(element => element - 1);
-    
-    // If there is a recycled pipe, move it as well
-    if (recycledPipes) {
-        recycledPipes = recycledPipes.map(element => element - 1);
-    }
+    recycledPipes = recycledPipes.map(element => element - 1);
 
     // "Infinite Pipes"
     for (i = 0; i < bufferPipes.length; i++) {
