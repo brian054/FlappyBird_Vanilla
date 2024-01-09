@@ -1,14 +1,13 @@
 /* 
-TODO: 
+Steps to finish: 
     - Fix pipe gapSize for recycled pipes, needs to hold old size when gapSize switches over
     - Set variable yPos's for pipes (4 or 5 yPos's???), pick a random one from array 
-    - FIXED TIME STEP runs way slower on 2nd monitor we need consistency across all 
-
-
+    - Pick Font - Score on Screen
     - Sprites
     - Death Animation
+
     - Wishlist: 
-        - Play against someone online - highest score wins
+        - Play against someone online - highest score wins - leaderboard
 */
 
 const canvas = document.getElementById("canvas");
@@ -23,11 +22,12 @@ backgroundImage.src = 'images/background.jpeg';
 // Flappy
 const rectWidth = 40;
 const rectHeight = 40;
-const gravity = 0.03;
+const gravity = 0.5;
 let rectX = canvas.width / 2 - rectWidth / 2;
 let rectY = canvas.height / 2 - rectHeight / 2;
 let rectColor = "red";
-let verticalVelocity = 0.5; // 1;
+let verticalVelocity = 0;
+let maxVerticalVelocity = 9; 
 let isFlyingUp = false;
 
 // Pipes
@@ -44,27 +44,7 @@ let recycledPipes = [];
 
 let score = 0;
 
-
-/*
-Infinite Pipes:
-
-So we'd have x amount of yPos's that we store in an array. 
-These yPos's are used to position each pipe pair. The pipes should also 
-have a "gap" value that over time gets smaller. 
-
-Maybe 5 different pipe positions possible
-
-Flow:
-- 3 or 4 buffered (I think 2-3 pairs of pipes can be on screen at a time)
-
-- Pick a random yPos from the positions array
-- Build the pipe pair
-- Store it in the "buffer" array 
-- Remove the pair from buffer array once it goes off screen
-
-*/
-
-// Gap size based on score - good
+// Gap size based on score
 let gapSize = 200; // decrease by 20 every 10 points
 let minimumGapSize = 100;
 //let gapSizes = [200, 180, 160, 140, 120, 100];
@@ -72,7 +52,7 @@ let minimumGapSize = 100;
 let distanceBetweenPipePair = 300;
 
 backgroundImage.onload = function() {
-    update(); 
+    updateLoop(performance.now()); 
 }
 
 function randomFromArray(array) {
@@ -94,14 +74,48 @@ function resetPipes(pipes, index) {
     }
 }
 
-// Set gapSize depending on score
-function gapSizeCheck() {
+// // Set gapSize depending on score
+// function gapSizeCheck() {
 
+// }
+
+// Handle Input - you don't want this in the update method since it adds a new event listener every frame, 
+document.addEventListener('keydown', function(event) {
+    // Only jump if not currenty flying
+    if (event.code === 'Space' && !isFlyingUp && (verticalVelocity > -maxVerticalVelocity)) {
+        verticalVelocity -= 9;
+        isFlyingUp = true;
+    }
+});
+
+document.addEventListener('keyup', function(event) {
+    // Reset jump boolean when spacebar released
+    if (event.code === 'Space') {
+        isFlyingUp = false;
+    }
+});
+
+// Fixed time step variables
+const fixedTimeStep = 16; // 60 FPS (1000ms / 60 frames per second)
+let lastTimestamp = performance.now();
+let lag = 0;
+
+function updateLoop(timestamp) {
+    const elapsed = timestamp - lastTimestamp;
+    lastTimestamp = timestamp;
+    lag += elapsed;
+
+    while (lag >= fixedTimeStep) {
+        update();
+        lag -= fixedTimeStep;
+    }
+
+    render();
+
+    requestAnimationFrame(updateLoop);
 }
 
-function update() {
-    ctx.drawImage(backgroundImage, 0, 0, backgroundImage.width, backgroundImage.height);   
-
+function update() {  
     // Apply gravity to the vertical velocity
     verticalVelocity += gravity;
     
@@ -109,11 +123,11 @@ function update() {
     rectY += verticalVelocity;
 
     // Move Pipes
-    bufferPipes = bufferPipes.map(element => element - 1);
-    recycledPipes = recycledPipes.map(element => element - 1);
+    bufferPipes = bufferPipes.map(element => element - 3);
+    recycledPipes = recycledPipes.map(element => element - 3);
 
     // "Infinite Pipes"
-    for (i = 0; i < bufferPipes.length; i++) {
+    for (let i = 0; i < bufferPipes.length; i++) {
         resetPipes(bufferPipes, i);
     }
 
@@ -133,7 +147,7 @@ function update() {
     if (bufferPipes[0] + pipeWidth < rectX) {
         score += 1;
         console.log("Score = " + score);
-        if (score % 10 == 0 && gapSize != minimumGapSize) { 
+        if (score % 5 == 0 && gapSize != minimumGapSize) { 
             gapSize -= 20;
         }
         // Assign recycled and buffered pipes xPos's
@@ -152,21 +166,10 @@ function update() {
         recycledPipes[1] = undefined;
     }
 
-    // Handle Input
-    document.addEventListener('keydown', function(event) {
-        // Only jump if not currenty flying
-        if (event.code === 'Space' && !isFlyingUp) {
-            verticalVelocity -= 2;
-            isFlyingUp = true;
-        }
-    });
+}
 
-    document.addEventListener('keyup', function(event) {
-        // Reset jump boolean when spacebar released
-        if (event.code === 'Space') {
-            isFlyingUp = false;
-        }
-    });
+function render() {
+    ctx.drawImage(backgroundImage, 0, 0, backgroundImage.width, backgroundImage.height); 
 
     // Draw Flappy
     ctx.beginPath();
@@ -182,8 +185,8 @@ function update() {
         ctx.fillRect(bufferPipes[i], pipeHeight + gapSize, pipeWidth, gameWindowHeight - (pipeHeight + gapSize));
     }
     ctx.stroke();
-    requestAnimationFrame(update);
+    //requestAnimationFrame(update);
 }
 
-requestAnimationFrame(update);
+requestAnimationFrame(updateLoop);
 
