@@ -1,7 +1,6 @@
 /* 
-Steps to finish: 
-    - Fix pipe gapSize for recycled pipes, needs to hold old size when gapSize switches over
-    - Set variable yPos's for pipes (4 or 5 yPos's???), pick a random one from array 
+TODO:
+    - Fix pipeHeight and gapSizes
     - Pick Font - Score on Screen
     - Sprites
     - Death Animation
@@ -30,24 +29,15 @@ let verticalVelocity = 0;
 let maxVerticalVelocity = 9; 
 let isFlyingUp = false;
 
-// Pipes
-const pipeWidth = 80;
-const pipeHeight = 200;
-//let pipeXPos = 400; 
-let firstPipeYPos = 0;
-let secondPipeYPos = gameWindowHeight - pipeHeight;
-
-// Basically just the xPos's, variable heights later
-// When pipe[0] is less than gameWindowWidth, reset it to the 900 spot 
-let bufferPipes = [900, 1200];
-let recycledPipes = [];
-
-let score = 0;
-
 // Gap size based on score
 let gapSize = 200; // decrease by 20 every 10 points
 let minimumGapSize = 100;
-//let gapSizes = [200, 180, 160, 140, 120, 100];
+
+// Pipes
+let pipes = [new Pipe(600, gapSize, gameWindowHeight), new Pipe(900, gapSize, gameWindowHeight), new Pipe(1200, gapSize, gameWindowHeight)];
+let activePipeIndex = 0;
+
+let score = 0;
 
 let distanceBetweenPipePair = 300;
 
@@ -66,18 +56,6 @@ function AABB_Collision(flappyX, flappyY, flappyWidth, flappyHeight, pipeX, pipe
         return true;
     }
 }
-
-// Reset a pipe when it goes off screen
-function resetPipes(pipes, index) { 
-    if (pipes[index] < 0 - pipeWidth) {
-        pipes[index] = 900;
-    }
-}
-
-// // Set gapSize depending on score
-// function gapSizeCheck() {
-
-// }
 
 // Handle Input - you don't want this in the update method since it adds a new event listener every frame, 
 document.addEventListener('keydown', function(event) {
@@ -123,17 +101,18 @@ function update() {
     rectY += verticalVelocity;
 
     // Move Pipes
-    bufferPipes = bufferPipes.map(element => element - 3);
-    recycledPipes = recycledPipes.map(element => element - 3);
+    for (let i = 0; i < pipes.length; i++) {
+        pipes[i].movePipes();
 
-    // "Infinite Pipes"
-    for (let i = 0; i < bufferPipes.length; i++) {
-        resetPipes(bufferPipes, i);
+        // Check if pipe is offscreen
+        // if (pipes[i].hasScored && pipes[i].pipeXPos + pipes[i].pipeWidth < 0) {
+        //     pipes[i] = new Pipe(600, gapSize, gameWindowHeight);
+        // }
     }
 
-    // Collision with pipe1 set test
-    if (AABB_Collision(rectX, rectY, rectWidth, rectHeight, bufferPipes[0], firstPipeYPos, pipeWidth, pipeHeight) || 
-        AABB_Collision(rectX, rectY, rectWidth, rectHeight, bufferPipes[0], secondPipeYPos, pipeWidth, pipeHeight)) {
+    // Collision with active pipe
+    if (AABB_Collision(rectX, rectY, rectWidth, rectHeight, pipes[activePipeIndex].pipeXPos, pipes[activePipeIndex].topPipeYPos, pipes[activePipeIndex].pipeWidth, pipes[activePipeIndex].topPipeHeight) || 
+        AABB_Collision(rectX, rectY, rectWidth, rectHeight, pipes[activePipeIndex].pipeXPos, pipes[activePipeIndex].bottomPipeYPos, pipes[activePipeIndex].pipeWidth, pipes[activePipeIndex].bottomPipeHeight)) {
         rectColor = "blue";
     }
 
@@ -144,26 +123,34 @@ function update() {
     }
 
     // Increase score if needed
-    if (bufferPipes[0] + pipeWidth < rectX) {
+    if (pipes[activePipeIndex].pipeXPos + pipes[activePipeIndex].pipeWidth < rectX && !pipes[activePipeIndex].hasScored) {
         score += 1;
+        pipes[activePipeIndex].hasScored = true;
         console.log("Score = " + score);
         if (score % 5 == 0 && gapSize != minimumGapSize) { 
             gapSize -= 20;
         }
-        // Assign recycled and buffered pipes xPos's
-        if (recycledPipes[0]) {
-            recycledPipes[1] = bufferPipes[0];
+
+        // Switch active pipe
+        if (activePipeIndex === 0 || activePipeIndex === 1) {
+            activePipeIndex += 1;
         } else {
-            recycledPipes[0] = bufferPipes[0];
+            activePipeIndex = 0;
         }
-        bufferPipes[0] = bufferPipes[1];
-        bufferPipes[1] = bufferPipes[0] + distanceBetweenPipePair; 
     }
 
-    // Switch recycled out if needed - this currently never runs
-    if (recycledPipes[0] + pipeWidth < 0) {
-        recycledPipes[0] = recycledPipes[1];
-        recycledPipes[1] = undefined;
+    // Could do this inside for loop above but for simplicity for now doing this
+    for (let i = 0; i < pipes.length; i++) {
+        //Check if pipe is offscreen
+        if (pipes[i].hasScored && pipes[i].pipeXPos + pipes[i].pipeWidth < 0) { // hasScored might not be needed here fr
+            if (i === 0) {
+                pipes[i] = new Pipe(pipes[2].pipeXPos  + distanceBetweenPipePair, gapSize, gameWindowHeight);    
+            } else if (i === 1) {
+                pipes[i] = new Pipe(pipes[0].pipeXPos  + distanceBetweenPipePair, gapSize, gameWindowHeight);  
+            } else {
+                pipes[i] = new Pipe(pipes[1].pipeXPos  + distanceBetweenPipePair, gapSize, gameWindowHeight); 
+            }
+        }
     }
 
 }
@@ -175,14 +162,8 @@ function render() {
     ctx.beginPath();
     ctx.fillStyle = rectColor;
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
-    ctx.fillStyle = "blue";
-    for (let i = 0; i < recycledPipes.length; i++) {
-        ctx.fillRect(recycledPipes[i], 0, pipeWidth, pipeHeight);
-        ctx.fillRect(recycledPipes[i], pipeHeight + gapSize, pipeWidth, gameWindowHeight - (pipeHeight + gapSize));
-    }
-    for (let i = 0; i < bufferPipes.length; i++) {
-        ctx.fillRect(bufferPipes[i], 0, pipeWidth, pipeHeight);
-        ctx.fillRect(bufferPipes[i], pipeHeight + gapSize, pipeWidth, gameWindowHeight - (pipeHeight + gapSize));
+    for (let i = 0; i < pipes.length; i++) {
+        pipes[i].drawPipes(ctx);
     }
     ctx.stroke();
     //requestAnimationFrame(update);
