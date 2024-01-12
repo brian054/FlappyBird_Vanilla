@@ -1,9 +1,10 @@
 /* 
 TODO:
-    - Fix pipeHeight and gapSizes
-    - Pick Font - Score on Screen
     - Sprites
     - Death Animation
+    - Menu Screen
+
+    - fine tune gapSize and scoreLimits for gapSize change
 
     - Wishlist: 
         - Play against someone online - highest score wins - leaderboard
@@ -35,6 +36,10 @@ let minimumGapSize = 100;
 
 // Pipes
 let pipes = [new Pipe(600, gapSize, gameWindowHeight), new Pipe(900, gapSize, gameWindowHeight), new Pipe(1200, gapSize, gameWindowHeight)];
+//console.log(pipes[0].topPipeHeight);
+let pipeTest = new Pipe(300, gapSize, gameWindowHeight);
+let x = pipeTest.topPipeHeight;
+console.log(x); // should be a number between 0 and 2
 let activePipeIndex = 0;
 
 let score = 0;
@@ -46,7 +51,7 @@ backgroundImage.onload = function() {
 }
 
 function randomFromArray(array) {
-    return array(Math.floor(Math.random() * array.length));
+    return array[(Math.floor(Math.random() * array.length))];
 }
 
 // Might need to use an object lol lot of parameters there
@@ -55,6 +60,17 @@ function AABB_Collision(flappyX, flappyY, flappyWidth, flappyHeight, pipeX, pipe
         flappyY < pipeY + pipeHeight && flappyY + flappyHeight > pipeY) {
         return true;
     }
+}
+
+function drawScore() {
+    ctx.font = "80px 'Press Start 2P'";
+    ctx.textAlign = "center";
+
+    let xPos = gameWindowWidth / 2;
+    let yPos = 120;
+
+    ctx.fillStyle = "white";
+    ctx.fillText(score, xPos, yPos);
 }
 
 // Handle Input - you don't want this in the update method since it adds a new event listener every frame, 
@@ -103,7 +119,6 @@ function update() {
     // Move Pipes
     for (let i = 0; i < pipes.length; i++) {
         pipes[i].movePipes();
-
         // Check if pipe is offscreen
         // if (pipes[i].hasScored && pipes[i].pipeXPos + pipes[i].pipeWidth < 0) {
         //     pipes[i] = new Pipe(600, gapSize, gameWindowHeight);
@@ -125,6 +140,7 @@ function update() {
     // Increase score if needed
     if (pipes[activePipeIndex].pipeXPos + pipes[activePipeIndex].pipeWidth < rectX && !pipes[activePipeIndex].hasScored) {
         score += 1;
+
         pipes[activePipeIndex].hasScored = true;
         console.log("Score = " + score);
         if (score % 5 == 0 && gapSize != minimumGapSize) { 
@@ -165,6 +181,7 @@ function render() {
     for (let i = 0; i < pipes.length; i++) {
         pipes[i].drawPipes(ctx);
     }
+    drawScore();
     ctx.stroke();
     //requestAnimationFrame(update);
 }

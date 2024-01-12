@@ -1,13 +1,8 @@
 class Pipe {
-    _heightArray = [100, 200, 300, 400, 500];
+   _heightArray = [100, 150, 200, 250, 300];
 
     pipeWidth = 80;
-    
-    topPipeHeight = this.#getRandomHeight(this._heightArray);
-    bottomPipeHeight;
-
     topPipeYPos = 0;
-    bottomPipeYPos;
 
     hasScored = false; 
 
@@ -15,6 +10,7 @@ class Pipe {
         this.pipeXPos = pipeXPos;
         this.gapSize = gapSize;
         this.gameWindowHeight = gameWindowHeight;
+        this.topPipeHeight = this.getRandomHeight();
         this.bottomPipeHeight = gameWindowHeight - 125;
         this.bottomPipeYPos = this.topPipeHeight + gapSize;
     }
@@ -32,9 +28,9 @@ class Pipe {
         ctx.fillRect(this.pipeXPos, this.bottomPipeYPos, this.pipeWidth, this.bottomPipeHeight);
     }
 
-    // private
-    #getRandomHeight(heightArray) {
-        return this._heightArray[Math.floor(Math.random() * heightArray.length)];
+    // private - not right now for testing 
+    getRandomHeight() {
+        return this._heightArray[Math.floor(Math.random() * this._heightArray.length)];
     }
 
 }
