@@ -6,13 +6,15 @@ class Pipe {
 
     hasScored = false; 
 
+    floorHeight = 575;
+
     constructor(pipeXPos, gapSize, gameWindowHeight) {
         this.pipeXPos = pipeXPos;
         this.gapSize = gapSize;
         this.gameWindowHeight = gameWindowHeight;
         this.topPipeHeight = this.getRandomHeight();
-        this.bottomPipeHeight = gameWindowHeight - 125;
         this.bottomPipeYPos = this.topPipeHeight + gapSize;
+        this.bottomPipeHeight = this.floorHeight - this.topPipeHeight - gapSize;
     }
 
     // public
