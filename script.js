@@ -8,6 +8,8 @@ TODO:
 
     - Wishlist: 
         - Play against someone online - highest score wins - leaderboard
+        - Sharingan Mode: 
+        - Abilites: Obito phase through pipe 
 */
 
 const canvas = document.getElementById("canvas");
@@ -59,14 +61,14 @@ function AABB_Collision(flappyX, flappyY, flappyWidth, flappyHeight, pipeX, pipe
 }
 
 function drawGameOver() {
-    ctx.font = "90px 'Press Start 2P'";
+    ctx.font = "60px 'Press Start 2P'";
     ctx.textAlign = "center";
 
     let xPos = gameWindowWidth / 2;
     let yPos = gameWindowHeight / 2;
 
     ctx.fillStyle = "red";
-    ctx.fillText("GAME OVER", xPos, yPos);
+    ctx.fillText("U DEAD ASS MF", xPos, yPos);
 }
 
 function drawScore() {
