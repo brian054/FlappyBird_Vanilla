@@ -68,7 +68,7 @@ function drawGameOver() {
     let yPos = gameWindowHeight / 2;
 
     ctx.fillStyle = "red";
-    ctx.fillText("U DEAD ASS MF", xPos, yPos);
+    ctx.fillText("U DEAD", xPos, yPos);
 }
 
 function drawScore() {
@@ -190,15 +190,20 @@ function update() {
 function render() {
     ctx.drawImage(backgroundImage, 0, 0, backgroundImage.width, backgroundImage.height); 
 
+    // Draw Pipes
+    for (let i = 0; i < pipes.length; i++) {
+        pipes[i].drawPipes(ctx);
+    }
+
     // Draw Flappy
     ctx.beginPath();
     ctx.fillStyle = rectColor;
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
-    for (let i = 0; i < pipes.length; i++) {
-        pipes[i].drawPipes(ctx);
-    }
+    
     drawScore();
+
     if (gameOver) { drawGameOver() };
+
     ctx.stroke();
     //requestAnimationFrame(update);
 }
