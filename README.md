@@ -1,4 +1,5 @@
 # FlappyBird_Vanilla
+Flappy Bird is an old mobile game that I wanted to recreate to use as a mini-game in another game project I have.
 
 # To Run on your localhost (MAC):
 Open a terminal and write the following:
