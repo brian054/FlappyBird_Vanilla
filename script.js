@@ -1,5 +1,6 @@
 /* 
 TODO:
+    - Add export and import stuff
     - Sprites
     - Death Animation
     - Menu Screen
@@ -108,6 +109,7 @@ let lag = 0;
 function updateLoop(timestamp) {
     const elapsed = timestamp - lastTimestamp;
     lastTimestamp = timestamp;
+    console.log("Last timestamp: " + lastTimestamp);
     lag += elapsed;
 
     while (lag >= fixedTimeStep) {
@@ -208,5 +210,7 @@ function render() {
     //requestAnimationFrame(update);
 }
 
-requestAnimationFrame(updateLoop);
+// This is basically your main() loop call, called at the beginning,
+// and then called recursively in updateLoop()
+requestAnimationFrame(updateLoop); 
 
